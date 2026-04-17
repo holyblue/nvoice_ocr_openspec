@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.env
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# uv
+.uv/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads / storage
+backend/storage/uploads/
+storage/uploads/
+
+# Node
+node_modules/
+dist/
+.cache/
+
+# Build output
+frontend/dist/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Claude
+.claude/settings.local.json

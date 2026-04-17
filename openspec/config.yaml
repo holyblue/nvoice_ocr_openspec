@@ -1,0 +1,13 @@
+schema: spec-driven
+
+rules:
+  proposal:
+    - 所有內容使用繁體中文撰寫（章節標題、描述文字）
+  design:
+    - 所有內容使用繁體中文撰寫（章節標題、描述文字）
+  specs:
+    - 所有內容使用繁體中文撰寫，包含 Requirement 名稱、Scenario 名稱、說明文字、WHEN/THEN 內容
+    - 保留下列項目為英文：RFC 2119 關鍵字（SHALL、MUST、SHOULD、MAY 等）、Gherkin 關鍵字（GIVEN、WHEN、THEN、AND、BUT）、OpenSpec 標記（ADDED、MODIFIED、REMOVED、RENAMED）、API 路徑、HTTP 狀態碼、程式碼區塊、檔案路徑
+  tasks:
+    - 所有任務描述使用繁體中文撰寫
+    - 保留下列項目為英文：任務核取方塊（- [ ] / - [x]）、程式碼識別字、檔案路徑、CLI 指令、套件名稱、API 路徑
