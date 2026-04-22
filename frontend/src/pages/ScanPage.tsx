@@ -96,8 +96,10 @@ export default function ScanPage() {
   ]
   const stepIndex = progressSteps.findIndex((s) => s.key === step)
 
+  const isReviewWithImage = step === 'review' && !!draft.imageBase64
+
   return (
-    <div className="max-w-lg mx-auto space-y-6">
+    <div className={`mx-auto space-y-6 ${isReviewWithImage ? 'max-w-5xl' : 'max-w-lg'}`}>
       <h1 className="text-xl font-bold text-gray-800">掃描發票</h1>
 
       {/* Progress bar */}
@@ -126,7 +128,7 @@ export default function ScanPage() {
       </div>
 
       {/* Step content */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+      <div className={step === 'review' ? '' : 'bg-white rounded-xl border border-gray-200 p-5 shadow-sm'}>
         {step === 'input' && (
           <div className="space-y-5">
             {/* Photo area: preview when captured, tabs+capture when not */}
@@ -297,23 +299,36 @@ export default function ScanPage() {
         )}
 
         {step === 'review' && draft.scannedInvoice && (
-          <div className="space-y-4">
-            <h2 className="text-base font-semibold text-gray-700">確認與儲存</h2>
-            <InvoiceForm
-              invoice={draft.scannedInvoice}
-              onSubmit={handleReviewSubmit}
-              isLoading={isLoading}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                resetDraft()
-                setStep('input')
-              }}
-              className="w-full py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm"
-            >
-              放棄，重新掃描
-            </button>
+          <div className={draft.imageBase64 ? 'md:grid md:grid-cols-[2fr_3fr] gap-6 items-start' : ''}>
+            {/* Left: full invoice image */}
+            {draft.imageBase64 && (
+              <div className="sticky top-4">
+                <img
+                  src={`data:image/jpeg;base64,${draft.imageBase64}`}
+                  alt="發票照片"
+                  className="w-full object-contain max-h-[calc(100vh-8rem)] rounded-lg"
+                />
+              </div>
+            )}
+            {/* Right: form */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-4">
+              <h2 className="text-base font-semibold text-gray-700">確認與儲存</h2>
+              <InvoiceForm
+                invoice={draft.scannedInvoice}
+                onSubmit={handleReviewSubmit}
+                isLoading={isLoading}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  resetDraft()
+                  setStep('input')
+                }}
+                className="w-full py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition text-sm"
+              >
+                放棄，重新掃描
+              </button>
+            </div>
           </div>
         )}
       </div>
