@@ -24,6 +24,9 @@ build/
 backend/storage/uploads/
 storage/uploads/
 
+# Local test data (images only kept locally)
+backend/data/
+
 # Node
 node_modules/
 dist/
