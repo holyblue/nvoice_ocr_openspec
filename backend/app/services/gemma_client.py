@@ -91,9 +91,9 @@ async def extract_from_image(image_base64: str, hint_json: Optional[dict] = None
                     ],
                 },
             ],
+            reasoning_effort="none",
             temperature=0.1,
             max_tokens=2048,
-            extra_body={"chat_template_kwargs": {"enable_thinking": False}},
         )
         raw = response.choices[0].message.content or ""
         return _parse_json_response(raw)
@@ -144,9 +144,9 @@ async def classify_with_llm(
                 {"role": "system", "content": _CLASSIFY_SYSTEM},
                 {"role": "user", "content": user_msg},
             ],
+            reasoning_effort="none",
             temperature=0.1,
             max_tokens=256,
-            extra_body={"chat_template_kwargs": {"enable_thinking": False}},
         )
         raw = response.choices[0].message.content or ""
         return _parse_json_response(raw)
