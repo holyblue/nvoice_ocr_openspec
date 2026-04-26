@@ -1,32 +1,42 @@
 """
 Gemma 4 Vision client for invoice OCR and LLM classification.
-Uses OpenAI-compatible API.
+Uses Google GenAI SDK (google-genai).
 """
 
 from __future__ import annotations
 
+import base64
 import json
 import logging
 import re
+import time
 from typing import Optional
 
-from openai import AsyncOpenAI
+from google import genai
+from google.genai import types
 
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-_client: AsyncOpenAI | None = None
+_client: genai.Client | None = None
 
 
-def _get_client() -> AsyncOpenAI:
+def _get_client() -> genai.Client:
     global _client
     if _client is None:
-        _client = AsyncOpenAI(
-            base_url=settings.gemma_endpoint_url,
-            api_key=settings.gemma_api_key,
-        )
+        _client = genai.Client(api_key=settings.gemma_api_key)
     return _client
+
+
+def _build_thinking_config() -> types.ThinkingConfig | None:
+    # Gemma 4 supports: none (off), minimal, high.
+    level = settings.gemma_thinking_level.strip().lower()
+    if level in ("none", "off", ""):
+        return None
+    if level == "minimal":
+        return types.ThinkingConfig(thinking_level="MINIMAL")
+    return types.ThinkingConfig(thinking_level="HIGH")
 
 
 _EXTRACTION_SYSTEM = """You are an OCR assistant for Taiwan e-invoices (電子發票/紙本發票).
@@ -72,30 +82,26 @@ async def extract_from_image(image_base64: str, hint_json: Optional[dict] = None
             hint_text = f"\n\n以下欄位已由 QR code 確認，請以此為準：\n{json.dumps(known, ensure_ascii=False)}"
 
     system_msg = _EXTRACTION_SYSTEM + hint_text
+    image_bytes = base64.b64decode(image_base64)
+    thinking_config = _build_thinking_config()
 
     try:
-        response = await _get_client().chat.completions.create(
+        t0 = time.monotonic()
+        response = await _get_client().aio.models.generate_content(
             model=settings.gemma_model_name,
-            messages=[
-                {"role": "system", "content": system_msg},
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{image_base64}"
-                            },
-                        },
-                        {"type": "text", "text": "請擷取此發票的所有欄位。"},
-                    ],
-                },
+            contents=[
+                types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
+                "請擷取此發票的所有欄位。",
             ],
-            reasoning_effort="none",
-            temperature=0.1,
-            max_tokens=2048,
+            config=types.GenerateContentConfig(
+                system_instruction=system_msg,
+                **({"thinking_config": thinking_config} if thinking_config else {}),
+                temperature=0.1,
+                max_output_tokens=2048,
+            ),
         )
-        raw = response.choices[0].message.content or ""
+        print(f"[gemma] extraction: {time.monotonic() - t0:.2f}s")
+        raw = response.text or ""
         return _parse_json_response(raw)
     except Exception as e:
         logger.error("Gemma extraction failed: %s", e)
@@ -137,18 +143,22 @@ async def classify_with_llm(
 
 請選出最適合的費用類別。"""
 
+    thinking_config = _build_thinking_config()
+
     try:
-        response = await _get_client().chat.completions.create(
+        t0 = time.monotonic()
+        response = await _get_client().aio.models.generate_content(
             model=settings.gemma_model_name,
-            messages=[
-                {"role": "system", "content": _CLASSIFY_SYSTEM},
-                {"role": "user", "content": user_msg},
-            ],
-            reasoning_effort="none",
-            temperature=0.1,
-            max_tokens=256,
+            contents=user_msg,
+            config=types.GenerateContentConfig(
+                system_instruction=_CLASSIFY_SYSTEM,
+                **({"thinking_config": thinking_config} if thinking_config else {}),
+                temperature=0.1,
+                max_output_tokens=256,
+            ),
         )
-        raw = response.choices[0].message.content or ""
+        print(f"[gemma] classification: {time.monotonic() - t0:.2f}s")
+        raw = response.text or ""
         return _parse_json_response(raw)
     except Exception as e:
         logger.error("Gemma classification failed: %s", e)

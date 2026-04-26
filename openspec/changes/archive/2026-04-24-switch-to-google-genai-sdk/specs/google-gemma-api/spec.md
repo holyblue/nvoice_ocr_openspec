@@ -1,7 +1,4 @@
-## Purpose
-透過 `google-genai` SDK 呼叫 Gemma 4 模型，用於發票 OCR 擷取與費用分類。
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: 使用 google-genai SDK 呼叫 Gemma 4 模型
 
@@ -19,10 +16,14 @@
 - **WHEN** `GEMMA_API_KEY` 為無效的 Google API Key
 - **THEN** 系統 SHALL 記錄錯誤並回傳空 dict（錯誤處理行為不變）
 
+## REMOVED Requirements
+
 ### Requirement: `.env` 中的 API Key 不被 Claude Code model 讀取
 
-系統 SHALL 在 `.claude/settings.json` 的 `permissions.denyRead` 中列出 `backend/.env`，防止 Claude Code 在工作階段中讀取該檔案內容。
+**Reason**: 此需求為 Claude Code 工具設定，非 API 客戶端實作範圍，應保留於原 `google-gemma-api` spec 中，本次不予異動。
+**Migration**: 無需遷移，原 `.claude/settings.json` 設定繼續有效。
 
-#### Scenario: Claude Code 嘗試讀取 `.env`
-- **WHEN** Claude Code model 嘗試讀取 `backend/.env`
-- **THEN** 系統 SHALL 拒絕該讀取請求
+### Requirement: `.env.example` 反映 Google AI Studio 設定（舊版）
+
+**Reason**: 原需求僅描述 OpenAI 相容 endpoint 的設定；新版改為描述 google-genai SDK 所需的環境變數，由 `google-genai-client` spec 接管完整定義。
+**Migration**: 移除 `GEMMA_ENDPOINT_URL`，新增 `GEMMA_THINKING_LEVEL=minimal`。

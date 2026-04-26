@@ -1,5 +1,5 @@
 """
-Script to verify Gemma 4 endpoint connectivity.
+Script to verify Gemma 4 endpoint connectivity via google-genai SDK.
 Usage: uv run python scripts/test_gemma_connection.py
 """
 
@@ -9,27 +9,22 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from openai import AsyncOpenAI
+from google import genai
 from app.config import settings
 
 
 async def main():
-    print(f"Testing Gemma endpoint: {settings.gemma_endpoint_url}")
     print(f"Model: {settings.gemma_model_name}")
+    print(f"Thinking level: {settings.gemma_thinking_level}")
 
-    client = AsyncOpenAI(
-        base_url=settings.gemma_endpoint_url,
-        api_key=settings.gemma_api_key,
-    )
+    client = genai.Client(api_key=settings.gemma_api_key)
 
     try:
-        response = await client.chat.completions.create(
+        response = await client.aio.models.generate_content(
             model=settings.gemma_model_name,
-            messages=[{"role": "user", "content": "Reply with: OK"}],
-            max_tokens=10,
+            contents="Reply with: OK",
         )
-        reply = response.choices[0].message.content
-        print(f"Response: {reply}")
+        print(f"Response: {response.text}")
         print("Connection OK")
     except Exception as e:
         print(f"Connection FAILED: {e}")

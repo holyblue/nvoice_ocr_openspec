@@ -19,6 +19,9 @@ export function useCamera(): UseCameraResult {
   const startCamera = useCallback(async () => {
     setError(null)
     try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('相機需要 HTTPS 連線才能使用，請改用 https:// 開頭的網址')
+      }
       const s = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' } },
       })
